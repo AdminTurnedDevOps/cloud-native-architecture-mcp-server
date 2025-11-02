@@ -1,0 +1,47 @@
+{
+  "name": "scalable-web-application",
+  "components": [
+    {"type": "route53", "name": "DNS"},
+    {"type": "cloudfront", "name": "CDN"},
+    {"type": "s3", "name": "static-assets"},
+    {"type": "alb", "name": "application-lb"},
+    {"type": "ec2", "name": "web-server-1"},
+    {"type": "ec2", "name": "web-server-2"},
+    {"type": "rds", "name": "postgres-primary"},
+    {"type": "rds", "name": "postgres-replica"},
+    {"type": "elasticache", "name": "redis-cluster"},
+    {"type": "sqs", "name": "job-queue"},
+    {"type": "lambda", "name": "background-worker"},
+    {"type": "sns", "name": "notifications"},
+    {"type": "s3", "name": "user-uploads"}
+  ],
+  "vpcs": [
+    {
+      "name": "Production VPC",
+      "components": [
+        "application-lb",
+        "web-server-1",
+        "web-server-2",
+        "postgres-primary",
+        "postgres-replica",
+        "redis-cluster"
+      ]
+    }
+  ],
+  "connections": [
+    {"from": "DNS", "to": "CDN"},
+    {"from": "CDN", "to": "static-assets"},
+    {"from": "CDN", "to": "application-lb", "label": "dynamic"},
+    {"from": "application-lb", "to": "web-server-1"},
+    {"from": "application-lb", "to": "web-server-2"},
+    {"from": "web-server-1", "to": "postgres-primary"},
+    {"from": "web-server-2", "to": "postgres-primary"},
+    {"from": "postgres-primary", "to": "postgres-replica", "label": "replication"},
+    {"from": "web-server-1", "to": "redis-cluster"},
+    {"from": "web-server-2", "to": "redis-cluster"},
+    {"from": "web-server-1", "to": "job-queue"},
+    {"from": "job-queue", "to": "background-worker"},
+    {"from": "background-worker", "to": "user-uploads"},
+    {"from": "background-worker", "to": "notifications"}
+  ]
+}

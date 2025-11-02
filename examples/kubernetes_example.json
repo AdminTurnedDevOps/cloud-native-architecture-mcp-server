@@ -1,0 +1,59 @@
+{
+  "name": "microservices-platform",
+  "components": [
+    {"type": "ingress", "name": "nginx-ingress"},
+    {"type": "service", "name": "api-gateway-svc"},
+    {"type": "deployment", "name": "api-gateway", "replicas": 3},
+    {"type": "service", "name": "auth-svc"},
+    {"type": "deployment", "name": "auth-service", "replicas": 2},
+    {"type": "service", "name": "user-svc"},
+    {"type": "deployment", "name": "user-service", "replicas": 3},
+    {"type": "service", "name": "order-svc"},
+    {"type": "deployment", "name": "order-service", "replicas": 2},
+    {"type": "statefulset", "name": "mongodb"},
+    {"type": "service", "name": "mongodb-svc"},
+    {"type": "pvc", "name": "mongodb-storage"},
+    {"type": "configmap", "name": "app-config"},
+    {"type": "secret", "name": "db-credentials"},
+    {"type": "hpa", "name": "api-gateway-hpa"}
+  ],
+  "clusters": [
+    {
+      "name": "Production Namespace",
+      "components": [
+        "nginx-ingress",
+        "api-gateway-svc",
+        "api-gateway",
+        "auth-svc",
+        "auth-service",
+        "user-svc",
+        "user-service",
+        "order-svc",
+        "order-service"
+      ]
+    },
+    {
+      "name": "Data Layer",
+      "components": [
+        "mongodb",
+        "mongodb-svc",
+        "mongodb-storage"
+      ]
+    }
+  ],
+  "connections": [
+    {"from": "nginx-ingress", "to": "api-gateway-svc", "label": "HTTPS"},
+    {"from": "api-gateway-svc", "to": "api-gateway"},
+    {"from": "api-gateway", "to": "auth-svc"},
+    {"from": "api-gateway", "to": "user-svc"},
+    {"from": "api-gateway", "to": "order-svc"},
+    {"from": "auth-svc", "to": "auth-service"},
+    {"from": "user-svc", "to": "user-service"},
+    {"from": "order-svc", "to": "order-service"},
+    {"from": "auth-service", "to": "mongodb-svc"},
+    {"from": "user-service", "to": "mongodb-svc"},
+    {"from": "order-service", "to": "mongodb-svc"},
+    {"from": "mongodb-svc", "to": "mongodb"},
+    {"from": "mongodb", "to": "mongodb-storage"}
+  ]
+}

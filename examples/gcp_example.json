@@ -1,0 +1,42 @@
+{
+  "name": "data-processing-platform",
+  "components": [
+    {"type": "dns", "name": "cloud-dns"},
+    {"type": "loadbalancing", "name": "global-lb"},
+    {"type": "gce", "name": "api-server-1"},
+    {"type": "gce", "name": "api-server-2"},
+    {"type": "gcs", "name": "raw-data-bucket"},
+    {"type": "functions", "name": "file-processor"},
+    {"type": "pubsub", "name": "data-events"},
+    {"type": "dataflow", "name": "etl-pipeline"},
+    {"type": "bigquery", "name": "analytics-warehouse"},
+    {"type": "sql", "name": "cloud-sql-postgres"},
+    {"type": "firestore", "name": "app-database"},
+    {"type": "gcs", "name": "processed-data"}
+  ],
+  "vpcs": [
+    {
+      "name": "Production Network",
+      "components": [
+        "global-lb",
+        "api-server-1",
+        "api-server-2",
+        "cloud-sql-postgres"
+      ]
+    }
+  ],
+  "connections": [
+    {"from": "cloud-dns", "to": "global-lb"},
+    {"from": "global-lb", "to": "api-server-1"},
+    {"from": "global-lb", "to": "api-server-2"},
+    {"from": "api-server-1", "to": "cloud-sql-postgres"},
+    {"from": "api-server-2", "to": "cloud-sql-postgres"},
+    {"from": "api-server-1", "to": "app-database"},
+    {"from": "api-server-2", "to": "app-database"},
+    {"from": "raw-data-bucket", "to": "file-processor", "label": "trigger"},
+    {"from": "file-processor", "to": "data-events"},
+    {"from": "data-events", "to": "etl-pipeline"},
+    {"from": "etl-pipeline", "to": "analytics-warehouse"},
+    {"from": "etl-pipeline", "to": "processed-data"}
+  ]
+}
